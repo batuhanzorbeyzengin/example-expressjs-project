@@ -6,8 +6,8 @@
 ## Installation
 
 ```bash 
-git clone 
-cd case
+git clone https://github.com/batuhanzorbeyzengin/example-expressjs-project.git
+cd example-expressjs-project
 chmod +x setup.sh
 ./setup.sh
 ```
