@@ -1,0 +1,75 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  password      String
+  bio           String?
+  location      String
+  latitude      Float
+  longitude     Float
+  avatars       Avatar[]
+  likesGiven    Like[]         @relation("UserGivesLike")
+  likesReceived Like[]         @relation("UserReceivesLike")
+  Notification  Notification[]
+  sessions      Session[]
+  role          Role           @default(USER)
+  totalLikes    Int            @default(0)
+  totalDislikes Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Avatar {
+  id     String @id @default(uuid())
+  url    String
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  targetId  String
+  user      User     @relation("UserGivesLike", fields: [userId], references: [id])
+  target    User     @relation("UserReceivesLike", fields: [targetId], references: [id])
+  type      LikeType
+  createdAt DateTime @default(now())
+
+  @@unique([userId, targetId])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  sessionId String   @unique
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      LikeType
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum LikeType {
+  LIKE
+  DISLIKE
+}

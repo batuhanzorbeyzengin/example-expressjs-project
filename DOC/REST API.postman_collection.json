@@ -1,0 +1,262 @@
+{
+	"info": {
+		"_postman_id": "0a921e24-b735-4632-9a87-c8a30d2e27b4",
+		"name": "REST API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32773683"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"batuhanzorbeyzengin@gmail.com\",\n    \"password\": \"batuhan2563\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_api_adress}}/auth/login",
+							"host": [
+								"{{base_api_adress}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "400",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{base_api_adress}}/auth/login",
+									"host": [
+										"{{base_api_adress}}"
+									],
+									"path": [
+										"auth",
+										"login"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"errors\": [\n        {\n            \"type\": \"field\",\n            \"msg\": \"Valid email is required\",\n            \"path\": \"email\",\n            \"location\": \"body\"\n        }\n    ]\n}"
+						},
+						{
+							"name": "401",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"batuhanzorbeyzengin@gmail.com\",\n    \"password\": \"batuhan2563\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_api_adress}}/auth/login",
+									"host": [
+										"{{base_api_adress}}"
+									],
+									"path": [
+										"auth",
+										"login"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"error\": \"Invalid email or password\"\n}"
+						},
+						{
+							"name": "login",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"batuhanzengin@gmail.com\",\n    \"password\": \"batuhan2563\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_api_adress}}/auth/login",
+									"host": [
+										"{{base_api_adress}}"
+									],
+									"path": [
+										"auth",
+										"login"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNjZTNmNGRmLWJhMGEtNDgzZi1hMWM3LWVlZmM3YTJlZmNkMSIsImVtYWlsIjoiYmF0dWhhbnplbmdpbkBnbWFpbC5jb20iLCJzZXNzaW9uSWQiOiJhMjI3NTM4MmY0MGE4MmNhN2UwMzAxMWJjMDQ1Njk4OSIsImlhdCI6MTcyMjU3NjcwMSwiZXhwIjoxNzIyNTgwMzAxfQ.im6dZwE-KFU-MIS7oIuFHLuu6GK-aaFsLbqQKkbK82Y\"\n}"
+						}
+					]
+				},
+				{
+					"name": "register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Batuhan Zorbey\",\n    \"email\": \"batuhanzorbeyzengin@gmail.com\",\n    \"password\": \"batuhan2563\",\n    \"bio\": \"Ben batuhan zorbey zengin bu benim bio açıklamam\",\n    \"location\": \"Turkey\",\n    \"latitude\": 26,\n    \"longitude\": -45\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_api_adress}}/auth/register",
+							"host": [
+								"{{base_api_adress}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "All User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_api_adress}}/users/nearby-users",
+							"host": [
+								"{{base_api_adress}}"
+							],
+							"path": [
+								"users",
+								"nearby-users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Rate",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"DISLIKE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_api_adress}}/users/6f9093a6-42ac-4b21-8bc2-91d681902a37/rate",
+							"host": [
+								"{{base_api_adress}}"
+							],
+							"path": [
+								"users",
+								"6f9093a6-42ac-4b21-8bc2-91d681902a37",
+								"rate"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_api_adress",
+			"value": "http://localhost:3010/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI0MmFkYTUyLTk2MGUtNGYyMy05MjIxLTZlMDQ5NGZjNjZjMCIsImVtYWlsIjoiYmF0dWhhbnplbmdpbkBnbWFpbC5jb20iLCJzZXNzaW9uSWQiOiI5ZjI0ZTRiYmJiMTkzOThiZDA1YzEwNjc2ZmUxMzQ2ZiIsImlhdCI6MTcyMjY2NzY1NiwiZXhwIjoxNzIyNjcxMjU2fQ.i9QM5WaXZVA5K4-mlUZ7yh48CnNO2OlAP6DpM8JmSmc",
+			"type": "string"
+		}
+	]
+}
