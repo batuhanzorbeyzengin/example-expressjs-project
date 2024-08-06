@@ -12,22 +12,15 @@ const clients = new Map();
 wss.on("connection", async (ws, req) => {
   const token = new URLSearchParams(req.url.split("?")[1]).get("token");
 
-  if (!token) {
-    ws.close(4001, "Unauthorized: No token provided");
-    return;
-  }
+  if (!token) return ws.close(4001, "Unauthorized: No token provided");
 
   try {
-    const decoded = jwt.verify(token, config.jwtSecret);
-    const { id: userId, sessionId } = decoded;
+    const { id: userId, sessionId } = jwt.verify(token, config.jwtSecret);
 
-    const session = await prisma.session.findUnique({
-      where: { sessionId },
-    });
+    const session = await prisma.session.findUnique({ where: { sessionId } });
 
     if (!session || session.userId !== userId) {
-      ws.close(4001, "Unauthorized: Invalid session");
-      return;
+      return ws.close(4001, "Unauthorized: Invalid session");
     }
 
     clients.set(ws, userId);
@@ -38,10 +31,11 @@ wss.on("connection", async (ws, req) => {
     });
 
     if (unreadNotifications.length > 0) {
-      unreadNotifications.forEach(async (notification) => {
-        const formattedMessage = await formatNotificationMessage(notification);
-        ws.send(JSON.stringify(formattedMessage));
-      });
+      await Promise.all(
+        unreadNotifications.map((notification) =>
+          sendNotification(ws, notification)
+        )
+      );
 
       await prisma.notification.updateMany({
         where: { userId, isRead: false },
@@ -69,19 +63,16 @@ redisClient.subscribe("notifications", async (message) => {
   const notification = JSON.parse(message);
   const { userId } = notification;
 
-  let sent = false;
-
-  const formattedMessage = await formatNotificationMessage(notification);
-
-  clients.forEach((clientUserId, clientWs) => {
+  const isSent = [...clients.entries()].some(([clientWs, clientUserId]) => {
     if (clientUserId === userId && clientWs.readyState === WebSocket.OPEN) {
-      clientWs.send(JSON.stringify(formattedMessage));
+      sendNotification(clientWs, notification);
       console.log(`Notification sent to user ${userId}`);
-      sent = true;
+      return true;
     }
+    return false;
   });
 
-  if (!sent) {
+  if (!isSent) {
     console.log(`No active WebSocket connection for user ${userId}`);
     await prisma.notification.create({
       data: {
@@ -96,17 +87,18 @@ redisClient.subscribe("notifications", async (message) => {
 
 console.log("Worker is listening for notifications...");
 
+async function sendNotification(ws, notification) {
+  const formattedMessage = await formatNotificationMessage(notification);
+  ws.send(JSON.stringify(formattedMessage));
+}
+
 async function formatNotificationMessage(notification) {
   try {
     const sender = await prisma.user.findUnique({
       where: { id: notification.userId },
     });
 
-    let messageType = "liked";
-
-    if (notification.type === "DISLIKE") {
-      messageType = "disliked";
-    }
+    const messageType = notification.type === "DISLIKE" ? "disliked" : "liked";
 
     return {
       message: `${sender.name} has ${messageType} your profile.`,

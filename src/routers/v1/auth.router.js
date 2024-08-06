@@ -8,47 +8,32 @@ const {
 } = require("../../validators/auth.validator");
 const upload = require("../../middlewares/upload.middleware");
 const authenticateToken = require("../../middlewares/auth.middleware");
+const handleRequest = require("../../lib/requestHandler");
 
 router.post(
   "/register",
   upload.array("avatars"),
   validate(registerValidation),
-  async (req, res) => {
-    try {
-      const user = await register(req.body, req.files);
-      res.status(201).json(user);
-    } catch (error) {
-      console.error(error);
-      res.status(error.status || 400).json({ error: error.message });
-    }
-  }
+  handleRequest(async (req) => await register(req.body, req.files))
 );
 
-router.post("/login", validate(loginValidation), async (req, res) => {
-  try {
-    const token = await login(req.body);
-    res.status(200).json({ token });
-  } catch (error) {
-    console.error(error);
-    res.status(error.status || 400).json({ error: error.message });
-  }
-});
+router.post(
+  "/login",
+  validate(loginValidation),
+  handleRequest(async (req) => ({ token: await login(req.body) }))
+);
 
-router.post("/logout", authenticateToken, async (req, res) => {
-  const userId = req.user.id;
-  const sessionId = req.user.sessionId;
+router.post(
+  "/logout",
+  authenticateToken,
+  handleRequest(async (req) => {
+    await logout(req.user.id, req.user.sessionId);
+    return { message: "Successfully logged out." };
+  })
+);
 
-  try {
-    await logout(userId, sessionId);
-    res.status(200).json({ message: "Successfully logged out." });
-  } catch (error) {
-    console.error("Error logging out:", error);
-    res.status(500).json({ error: "Failed to logout." });
-  }
-});
-
-router.get("/check-token", authenticateToken, (req, res) => {
-  res.status(200).json({ message: "Token is valid." });
-});
+router.get("/check-token", authenticateToken, (req, res) =>
+  res.status(200).json({ message: "Token is valid." })
+);
 
 module.exports = router;

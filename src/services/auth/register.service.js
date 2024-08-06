@@ -3,23 +3,17 @@ const bcrypt = require("bcryptjs");
 const fs = require("fs");
 const path = require("path");
 const { addUserToIndex } = require("../../lib/elasticsearch");
+
 const prisma = new PrismaClient();
 
 /**
  * Checks if a user already exists with the given email
  * @param {string} email
- * @returns {boolean} true if the user exists
+ * @throws {Error} Throws an error if the email is already in use
  */
 const checkUserExists = async (email) => {
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
-  });
-
-  if (existingUser) {
-    const error = new Error("Email is already in use");
-    error.status = 409;
-    throw error;
-  }
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+  if (existingUser) throw Object.assign(new Error("Email is already in use"), { status: 409 });
 };
 
 /**
@@ -27,20 +21,16 @@ const checkUserExists = async (email) => {
  * @param {string} password
  * @returns {string} hashed password
  */
-const hashPassword = async (password) => {
-  return await bcrypt.hash(password, 10);
-};
+const hashPassword = (password) => bcrypt.hash(password, 10);
 
 /**
  * Creates a new user in the database
  * @param {object} userData
  * @returns {object} newUser
  */
-const createUser = async (userData) => {
-  const { name, email, password, bio, location, latitude, longitude } = userData;
+const createUser = async ({ name, email, password, bio, location, latitude, longitude }) => {
   const hashedPassword = await hashPassword(password);
-
-  return await prisma.user.create({
+  return prisma.user.create({
     data: {
       name,
       email,
@@ -61,28 +51,18 @@ const createUser = async (userData) => {
  * @returns {array} avatarsData
  */
 const saveAvatarFiles = (files, userId) => {
-  if (files && files.length > 0) {
-    const userDir = path.join(__dirname, "../../../uploads", userId);
+  if (!files || files.length === 0) return [];
 
-    if (!fs.existsSync(userDir)) {
-      fs.mkdirSync(userDir, { recursive: true });
-    }
+  const userDir = path.join(__dirname, "../../../uploads", userId);
+  if (!fs.existsSync(userDir)) fs.mkdirSync(userDir, { recursive: true });
 
-    return files.map((file) => {
-      if (!file || !file.originalname) {
-        throw new Error("File upload failed, no filename provided");
-      }
-
-      const filename = `${Date.now()}-${file.originalname}`;
-      const avatarPath = path.join(userDir, filename);
-
-      fs.writeFileSync(avatarPath, file.buffer);
-
-      return { url: `/uploads/${userId}/${filename}` };
-    });
-  }
-
-  return [];
+  return files.map((file) => {
+    if (!file || !file.originalname) throw new Error("File upload failed, no filename provided");
+    const filename = `${Date.now()}-${file.originalname}`;
+    const avatarPath = path.join(userDir, filename);
+    fs.writeFileSync(avatarPath, file.buffer);
+    return { url: `/uploads/${userId}/${filename}` };
+  });
 };
 
 /**
@@ -90,17 +70,12 @@ const saveAvatarFiles = (files, userId) => {
  * @param {string} userId
  * @param {array} avatarsData
  */
-const updateUserAvatars = async (userId, avatarsData) => {
-  if (avatarsData.length > 0) {
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        avatars: {
-          create: avatarsData,
-        },
-      },
-    });
-  }
+const updateUserAvatars = (userId, avatarsData) => {
+  if (avatarsData.length === 0) return;
+  return prisma.user.update({
+    where: { id: userId },
+    data: { avatars: { create: avatarsData } },
+  });
 };
 
 /**
@@ -110,21 +85,12 @@ const updateUserAvatars = async (userId, avatarsData) => {
  * @returns {object} registration result
  */
 const register = async (userData, files) => {
-  const { email } = userData;
-
-  await checkUserExists(email);
-
+  await checkUserExists(userData.email);
   const newUser = await createUser(userData);
-
   const avatarsData = saveAvatarFiles(files, newUser.id);
-
   await updateUserAvatars(newUser.id, avatarsData);
-
   await addUserToIndex(newUser);
-
-  return {
-    message: "User registration successful",
-  };
+  return { message: "User registration successful" };
 };
 
 module.exports = register;

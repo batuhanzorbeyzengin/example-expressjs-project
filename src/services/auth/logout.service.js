@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 /**
@@ -7,14 +7,10 @@ const prisma = new PrismaClient();
  * @param {string} userId - The ID of the user logging out.
  * @param {string} sessionId - The ID of the session to be deleted.
  */
-async function logout(userId, sessionId) {
-  // Delete the session from the database
+const logout = async (userId, sessionId) => {
   await prisma.session.deleteMany({
-    where: {
-      userId,
-      sessionId,
-    },
+    where: { userId, sessionId },
   });
-}
+};
 
 module.exports = logout;
